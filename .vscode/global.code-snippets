@@ -1,0 +1,60 @@
+{
+	"Pretty Print": {
+		"scope": "rust",
+		"description": "pretty print println!",
+		"prefix": "print",
+		"body": [
+			"println!(\"{:#?}\", ${0});"
+		]
+	},
+	"Derive Debug Attriubte": {
+		"scope": "rust",
+		"description": "derive debug attribute",
+		"prefix": "debug_attr",
+		"body": [
+			"#[derive(Debug, Deserialize, Serialize)]"
+		]
+	},
+	"Create Empty Model": {
+		"scope": "rust",
+		"prefix": "model",
+		"body": [
+			"use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};",
+			"use serde::{Deserialize, Serialize};",
+			"",
+			"#[derive(Debug, Serialize, Deserialize, Clone)]",
+			"pub struct $TM_FILENAME_BASE {",
+			"\t#[serde(rename = \"_id\")]",
+			"\tpub id: String,",
+			"\tpub created_at: DateTime,",
+			"\tpub updated_at: DateTime,",
+			"}",
+			"",
+			"impl $TM_FILENAME_BASE {",
+			"\t#[allow(dead_code)]",
+			"\tpub async fn migrate() -> Result<Vec<String>, MongooseError> {",
+			"\t\tlet indexes = vec![IndexModel::builder()",
+			"\t\t\t.keys(doc! {})",
+			"\t\t\t.options(IndexOptions::builder().build())",
+			"\t\t\t.build()];",
+			"\t\tlet result = Self::create_indexes(&indexes).await?;",
+			"\t\tOk(result.index_names)",
+			"\t}",
+			"}",
+			"",
+			"impl Default for $TM_FILENAME_BASE {",
+			"\tfn default() -> Self {",
+			"\t\tSelf {",
+			"\t\t\tid: Self::generate_nanoid(),",
+			"\t\t\tcreated_at: DateTime::now(),",
+			"\t\t\tupdated_at: DateTime::now(),",
+			"\t\t}",
+			"\t}",
+			"}",
+			"",
+			"impl Model for $TM_FILENAME_BASE {}",
+			""
+		],
+		"description": "create an empty mongoose model file"
+	}
+}

@@ -1,0 +1,39 @@
+[package]
+name = "service_mocker"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+debug = 0
+incremental = false
+panic = "abort"
+opt-level = 3       # 0-3
+strip = 'symbols'   # strip symbols from binary
+lto = true          # enable link time optimization
+
+[dependencies]
+aws-config = "1.5.5"
+lambda_http = "0.13.0"
+lambda_runtime = "0.13.0"
+axum = "0.7.5"
+chrono = { version = "0.4.38", features = ["serde"] }
+dotenv = "0.15.0"
+meme_cache = "0.3.0"
+mongoose = "0.6.2"
+serde = { version = "1.0.209", features = ["derive"] }
+thiserror = "1.0.63"
+tokio = { version = "1.39.3", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+nanoid = "0.4.0"
+serde_json = "1.0.127"
+aws_lambda_events = "0.15.1"
+
+
+
+[[bin]]
+name = "api"
+path = "src/bin/handlers/api.rs"
+
+
+

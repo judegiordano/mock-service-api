@@ -1,0 +1,9 @@
+/target
+
+node_modules
+
+.env
+
+# sst
+.sst
+.build

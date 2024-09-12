@@ -1,0 +1,88 @@
+name: Deploy Prod
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pguyot/arm-runner-action@v2
+
+      - name: use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+
+      - name: use pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: use Rust
+        uses: actions-rs/toolchain@v1
+
+      - name: use Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: use Zig
+        uses: korandoru/setup-zig@v1
+        with:
+          zig-version: master
+
+      - name: use Cargo Lambda
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+          platform: linux
+          arch: aarch64 # | x86_64
+
+      - name: cargo lint
+        run: cargo lint
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: sst install providers
+        run: |
+          set -euxo pipefail
+          pnpm sst install
+
+      - name: build lambdas
+        run: |
+          set -euxo pipefail
+          cargo lambda build --release --arm64
+
+      - name: sst deploy
+        run: |
+          set -euxo pipefail
+          pnpm sst deploy --stage prod
+
+    env:
+      STAGE: prod
+      LOG_LEVEL: info
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

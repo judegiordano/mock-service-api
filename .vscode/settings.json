@@ -1,0 +1,17 @@
+{
+  "[rust]": {
+    "editor.formatOnSave": true,
+  },
+  "rust-analyzer.diagnostics.disabled": [
+    "unresolved-proc-macro",
+    "macro-error"
+  ],
+  "debug.allowBreakpointsEverywhere": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+  }
+}
