@@ -23,10 +23,7 @@ export default $config({
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
       MONGO_URI: process.env.MONGO_URI,
     }
-    
-    
-    
-    
+
     const api = new sst.aws.Function('api', {
       handler: 'bootstrap',
       bundle: 'target/lambda/api',
@@ -41,9 +38,8 @@ export default $config({
       environment: {
         ...environment,
       },
-      link: []
     });
-    
+
     return {
       url: api.url,
     }

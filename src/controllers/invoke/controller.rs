@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, Request},
-    http::{Method, StatusCode},
+    http::{HeaderName, Method, StatusCode},
     response::IntoResponse,
     Json,
 };
@@ -29,6 +29,7 @@ async fn get_or_cache(mock_id: &str) -> Result<MockResponse, AppError> {
 pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
     let mock_id = mock_id.to_string();
     let mock = get_or_cache(&mock_id).await?;
+    // method
     let invocation_method = match req.method() {
         &Method::OPTIONS => MockMethod::OPTIONS,
         &Method::GET => MockMethod::GET,
@@ -45,7 +46,18 @@ pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
             mock.method
         )));
     };
+    // status / body
     let status_code = StatusCode::from_u16(mock.status_code).map_err(AppError::bad_request)?;
-    let body = mock.response_body;
-    Ok((status_code, Json(body)).into_response())
+    let body = mock.body;
+    let mut response = (status_code, Json(body)).into_response();
+    // headers
+    if let Some(mock_headers) = mock.headers {
+        for header in mock_headers {
+            response.headers_mut().append(
+                header.key.parse::<HeaderName>().unwrap(),
+                header.value.parse().unwrap(),
+            );
+        }
+    }
+    Ok(response)
 }
