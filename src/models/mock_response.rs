@@ -1,69 +1,13 @@
-use axum::http::{HeaderName, HeaderValue, Method};
-use chrono::Utc;
 use meme_cache::{get, set};
 use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-use crate::errors::AppError;
+use crate::{
+    errors::AppError,
+    types::mock::{Dto, MockMethod, Response},
+};
 
 const MOCK_CACHE_IN_MS: i64 = 60_000;
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub enum MockMethod {
-    GET,
-    POST,
-    PUT,
-    DELETE,
-    PATCH,
-    HEAD,
-    OPTIONS,
-}
-
-impl MockMethod {
-    pub fn from_method(method: &Method) -> Result<Self, AppError> {
-        let invocation_method = match *method {
-            Method::OPTIONS => Self::OPTIONS,
-            Method::GET => Self::GET,
-            Method::POST => Self::POST,
-            Method::PUT => Self::PUT,
-            Method::DELETE => Self::DELETE,
-            Method::HEAD => Self::HEAD,
-            Method::PATCH => Self::PATCH,
-            _ => return Err(AppError::method_not_allowed("method not supported")),
-        };
-        Ok(invocation_method)
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Dto<'a> {
-    pub id: &'a str,
-    pub name: &'a str,
-    pub method: MockMethod,
-    pub status_code: u16,
-    pub body: Option<Value>,
-    pub headers: Option<Vec<MockHeader>>,
-    pub delay_in_ms: Option<u32>,
-    pub created_at: chrono::DateTime<Utc>,
-    pub updated_at: chrono::DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MockHeader {
-    pub key: String,
-    pub value: String,
-}
-
-impl MockHeader {
-    pub fn parse_key(&self) -> Result<HeaderName, AppError> {
-        self.key.parse().map_err(AppError::bad_request)
-    }
-
-    pub fn parse_value(&self) -> Result<HeaderValue, AppError> {
-        self.value.parse().map_err(AppError::bad_request)
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MockResponse {
@@ -71,10 +15,7 @@ pub struct MockResponse {
     pub id: String,
     pub name: String,
     pub method: MockMethod,
-    pub status_code: u16,
-    pub body: Option<Value>,
-    pub headers: Option<Vec<MockHeader>>,
-    pub delay_in_ms: Option<u32>,
+    pub response: Response,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
@@ -95,10 +36,7 @@ impl MockResponse {
             id: &self.id,
             name: &self.name,
             method: self.method.clone(),
-            status_code: self.status_code,
-            body: self.body.clone(),
-            headers: self.headers.clone(),
-            delay_in_ms: self.delay_in_ms,
+            response: self.response.clone(),
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
         }
@@ -119,11 +57,8 @@ impl Default for MockResponse {
         Self {
             id: Self::generate_nanoid(),
             name: String::default(),
-            status_code: 200,
             method: MockMethod::GET,
-            body: None,
-            headers: None,
-            delay_in_ms: None,
+            response: Default::default(),
             created_at: DateTime::now(),
             updated_at: DateTime::now(),
         }

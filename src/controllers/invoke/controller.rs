@@ -8,15 +8,16 @@ use std::time::Duration;
 
 use crate::{
     errors::AppError,
-    models::mock_response::{MockMethod, MockResponse},
-    types::ApiResponse,
+    models::mock_response::MockResponse,
+    types::{mock::MockMethod, ApiResponse},
 };
 
 pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
     let mock_id = mock_id.to_string();
     let mock = MockResponse::get_or_cache(&mock_id).await?;
+    let res = mock.response;
     // sleep
-    if let Some(delay) = mock.delay_in_ms {
+    if let Some(delay) = res.delay_in_ms {
         tokio::time::sleep(Duration::from_millis(delay.into())).await;
     }
     // method
@@ -28,10 +29,10 @@ pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
         )));
     };
     // status / body
-    let status_code = StatusCode::from_u16(mock.status_code).map_err(AppError::bad_request)?;
-    let mut response = (status_code, Json(mock.body)).into_response();
+    let status_code = StatusCode::from_u16(res.status_code).map_err(AppError::bad_request)?;
+    let mut response = (status_code, Json(res.body)).into_response();
     // headers
-    if let Some(mock_headers) = mock.headers {
+    if let Some(mock_headers) = res.headers {
         let headers = response.headers_mut();
         for header in mock_headers {
             headers.append(header.parse_key()?, header.parse_value()?);
