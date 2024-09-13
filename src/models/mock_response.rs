@@ -58,7 +58,7 @@ impl Default for MockResponse {
             id: Self::generate_nanoid(),
             name: String::default(),
             method: MockMethod::GET,
-            response: Default::default(),
+            response: Response::default(),
             created_at: DateTime::now(),
             updated_at: DateTime::now(),
         }

@@ -12,7 +12,7 @@ use crate::{
     types::{mock::MockMethod, ApiResponse},
 };
 
-pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
+pub async fn invoke(mock_id: Path<String>, request: Request) -> ApiResponse {
     let mock_id = mock_id.to_string();
     let mock = MockResponse::get_or_cache(&mock_id).await?;
     let res = mock.response;
@@ -21,7 +21,7 @@ pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
         tokio::time::sleep(Duration::from_millis(delay.into())).await;
     }
     // method
-    let invocation_method = MockMethod::from_method(req.method())?;
+    let invocation_method = MockMethod::from_method(request.method())?;
     if invocation_method != mock.method {
         return Err(AppError::method_not_allowed(format!(
             "method should be: {:?}",
