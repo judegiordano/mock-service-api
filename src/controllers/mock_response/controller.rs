@@ -21,10 +21,10 @@ pub struct CreateMockPayload {
 
 pub async fn create_mock(body: Json<CreateMockPayload>) -> ApiResponse {
     let mock = MockResponse {
-        name: body.name.to_owned(),
-        method: body.method.to_owned(),
-        body: body.body.to_owned(),
-        headers: body.headers.to_owned(),
+        name: body.name.clone(),
+        method: body.method.clone(),
+        body: body.body.clone(),
+        headers: body.headers.clone(),
         status_code: body.status_code,
         delay_in_ms: body.delay_in_ms,
         ..Default::default()

@@ -1,4 +1,4 @@
-use axum::http::Method;
+use axum::http::{HeaderName, HeaderValue, Method};
 use chrono::Utc;
 use meme_cache::{get, set};
 use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
@@ -9,7 +9,7 @@ use crate::errors::AppError;
 
 const MOCK_CACHE_IN_MS: i64 = 60_000;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum MockMethod {
     GET,
     POST,
@@ -22,14 +22,14 @@ pub enum MockMethod {
 
 impl MockMethod {
     pub fn from_method(method: &Method) -> Result<Self, AppError> {
-        let invocation_method = match method {
-            &Method::OPTIONS => MockMethod::OPTIONS,
-            &Method::GET => MockMethod::GET,
-            &Method::POST => MockMethod::POST,
-            &Method::PUT => MockMethod::PUT,
-            &Method::DELETE => MockMethod::DELETE,
-            &Method::HEAD => MockMethod::HEAD,
-            &Method::PATCH => MockMethod::PATCH,
+        let invocation_method = match *method {
+            Method::OPTIONS => Self::OPTIONS,
+            Method::GET => Self::GET,
+            Method::POST => Self::POST,
+            Method::PUT => Self::PUT,
+            Method::DELETE => Self::DELETE,
+            Method::HEAD => Self::HEAD,
+            Method::PATCH => Self::PATCH,
             _ => return Err(AppError::method_not_allowed("method not supported")),
         };
         Ok(invocation_method)
@@ -37,9 +37,9 @@ impl MockMethod {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MockResponseDto {
-    pub id: String,
-    pub name: String,
+pub struct Dto<'a> {
+    pub id: &'a str,
+    pub name: &'a str,
     pub method: MockMethod,
     pub status_code: u16,
     pub body: Option<Value>,
@@ -53,6 +53,16 @@ pub struct MockResponseDto {
 pub struct MockHeader {
     pub key: String,
     pub value: String,
+}
+
+impl MockHeader {
+    pub fn parse_key(&self) -> Result<HeaderName, AppError> {
+        self.key.parse().map_err(AppError::bad_request)
+    }
+
+    pub fn parse_value(&self) -> Result<HeaderValue, AppError> {
+        self.value.parse().map_err(AppError::bad_request)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -80,14 +90,14 @@ impl MockResponse {
         Ok(result.index_names)
     }
 
-    pub fn dto(&self) -> MockResponseDto {
-        MockResponseDto {
-            id: self.id.to_owned(),
-            name: self.name.to_owned(),
-            method: self.method.to_owned(),
-            status_code: self.status_code.to_owned(),
-            body: self.body.to_owned(),
-            headers: self.headers.to_owned(),
+    pub fn dto(&self) -> Dto {
+        Dto {
+            id: &self.id,
+            name: &self.name,
+            method: self.method.clone(),
+            status_code: self.status_code,
+            body: self.body.clone(),
+            headers: self.headers.clone(),
             delay_in_ms: self.delay_in_ms,
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
@@ -95,7 +105,7 @@ impl MockResponse {
     }
 
     pub async fn get_or_cache(id: &str) -> Result<Self, AppError> {
-        if let Some(cached_mock) = get::<Self>(&id).await {
+        if let Some(cached_mock) = get::<Self>(id).await {
             return Ok(cached_mock);
         }
         let mock = Self::read_by_id(&id).await.map_err(AppError::not_found)?;

@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, Request},
-    http::{HeaderName, StatusCode},
+    http::StatusCode,
     response::IntoResponse,
     Json,
 };
@@ -29,15 +29,12 @@ pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
     };
     // status / body
     let status_code = StatusCode::from_u16(mock.status_code).map_err(AppError::bad_request)?;
-    let body = mock.body;
-    let mut response = (status_code, Json(body)).into_response();
+    let mut response = (status_code, Json(mock.body)).into_response();
     // headers
     if let Some(mock_headers) = mock.headers {
+        let headers = response.headers_mut();
         for header in mock_headers {
-            response.headers_mut().append(
-                header.key.parse::<HeaderName>().unwrap(),
-                header.value.parse().unwrap(),
-            );
+            headers.append(header.parse_key()?, header.parse_value()?);
         }
     }
     Ok(response)
