@@ -1,11 +1,9 @@
 use axum::{
     extract::{Path, Request},
-    http::{HeaderName, Method, StatusCode},
+    http::{HeaderName, StatusCode},
     response::IntoResponse,
     Json,
 };
-use meme_cache::{get, set};
-use mongoose::Model;
 use std::time::Duration;
 
 use crate::{
@@ -14,37 +12,15 @@ use crate::{
     types::ApiResponse,
 };
 
-const MOCK_CACHE_IN_MS: i64 = 60_000;
-
-async fn get_or_cache(mock_id: &str) -> Result<MockResponse, AppError> {
-    if let Some(cached_mock) = get::<MockResponse>(&mock_id).await {
-        return Ok(cached_mock);
-    }
-    let mock = MockResponse::read_by_id(&mock_id)
-        .await
-        .map_err(AppError::not_found)?;
-    set(&mock_id, &mock, MOCK_CACHE_IN_MS).await;
-    Ok(mock)
-}
-
 pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
     let mock_id = mock_id.to_string();
-    let mock = get_or_cache(&mock_id).await?;
+    let mock = MockResponse::get_or_cache(&mock_id).await?;
     // sleep
     if let Some(delay) = mock.delay_in_ms {
         tokio::time::sleep(Duration::from_millis(delay.into())).await;
     }
     // method
-    let invocation_method = match req.method() {
-        &Method::OPTIONS => MockMethod::OPTIONS,
-        &Method::GET => MockMethod::GET,
-        &Method::POST => MockMethod::POST,
-        &Method::PUT => MockMethod::PUT,
-        &Method::DELETE => MockMethod::DELETE,
-        &Method::HEAD => MockMethod::HEAD,
-        &Method::PATCH => MockMethod::PATCH,
-        _ => return Err(AppError::method_not_allowed("method not supported")),
-    };
+    let invocation_method = MockMethod::from_method(req.method())?;
     if invocation_method != mock.method {
         return Err(AppError::method_not_allowed(format!(
             "method should be: {:?}",

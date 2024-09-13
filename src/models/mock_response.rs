@@ -1,7 +1,13 @@
+use axum::http::Method;
 use chrono::Utc;
+use meme_cache::{get, set};
 use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+use crate::errors::AppError;
+
+const MOCK_CACHE_IN_MS: i64 = 60_000;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum MockMethod {
@@ -12,6 +18,22 @@ pub enum MockMethod {
     PATCH,
     HEAD,
     OPTIONS,
+}
+
+impl MockMethod {
+    pub fn from_method(method: &Method) -> Result<Self, AppError> {
+        let invocation_method = match method {
+            &Method::OPTIONS => MockMethod::OPTIONS,
+            &Method::GET => MockMethod::GET,
+            &Method::POST => MockMethod::POST,
+            &Method::PUT => MockMethod::PUT,
+            &Method::DELETE => MockMethod::DELETE,
+            &Method::HEAD => MockMethod::HEAD,
+            &Method::PATCH => MockMethod::PATCH,
+            _ => return Err(AppError::method_not_allowed("method not supported")),
+        };
+        Ok(invocation_method)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -70,6 +92,15 @@ impl MockResponse {
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
         }
+    }
+
+    pub async fn get_or_cache(id: &str) -> Result<Self, AppError> {
+        if let Some(cached_mock) = get::<Self>(&id).await {
+            return Ok(cached_mock);
+        }
+        let mock = Self::read_by_id(&id).await.map_err(AppError::not_found)?;
+        set(&id, &mock, MOCK_CACHE_IN_MS).await;
+        Ok(mock)
     }
 }
 
