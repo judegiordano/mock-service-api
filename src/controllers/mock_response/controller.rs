@@ -15,6 +15,7 @@ pub struct CreateMockPayload {
     pub method: MockMethod,
     pub body: Option<Value>,
     pub headers: Option<Vec<MockHeader>>,
+    pub delay_in_ms: Option<u32>,
     pub status_code: u16,
 }
 
@@ -25,6 +26,7 @@ pub async fn create_mock(body: Json<CreateMockPayload>) -> ApiResponse {
         body: body.body.to_owned(),
         headers: body.headers.to_owned(),
         status_code: body.status_code,
+        delay_in_ms: body.delay_in_ms,
         ..Default::default()
     };
     let mock = mock.save().await.map_err(AppError::bad_request)?;

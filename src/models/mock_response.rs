@@ -20,7 +20,9 @@ pub struct MockResponseDto {
     pub name: String,
     pub method: MockMethod,
     pub status_code: u16,
-    pub response_body: Option<Value>,
+    pub body: Option<Value>,
+    pub headers: Option<Vec<MockHeader>>,
+    pub delay_in_ms: Option<u32>,
     pub created_at: chrono::DateTime<Utc>,
     pub updated_at: chrono::DateTime<Utc>,
 }
@@ -40,6 +42,7 @@ pub struct MockResponse {
     pub status_code: u16,
     pub body: Option<Value>,
     pub headers: Option<Vec<MockHeader>>,
+    pub delay_in_ms: Option<u32>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
@@ -61,7 +64,9 @@ impl MockResponse {
             name: self.name.to_owned(),
             method: self.method.to_owned(),
             status_code: self.status_code.to_owned(),
-            response_body: self.body.to_owned(),
+            body: self.body.to_owned(),
+            headers: self.headers.to_owned(),
+            delay_in_ms: self.delay_in_ms,
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
         }
@@ -77,6 +82,7 @@ impl Default for MockResponse {
             method: MockMethod::GET,
             body: None,
             headers: None,
+            delay_in_ms: None,
             created_at: DateTime::now(),
             updated_at: DateTime::now(),
         }

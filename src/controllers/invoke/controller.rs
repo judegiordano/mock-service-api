@@ -6,6 +6,7 @@ use axum::{
 };
 use meme_cache::{get, set};
 use mongoose::Model;
+use std::time::Duration;
 
 use crate::{
     errors::AppError,
@@ -29,6 +30,10 @@ async fn get_or_cache(mock_id: &str) -> Result<MockResponse, AppError> {
 pub async fn invoke(mock_id: Path<String>, req: Request) -> ApiResponse {
     let mock_id = mock_id.to_string();
     let mock = get_or_cache(&mock_id).await?;
+    // sleep
+    if let Some(delay) = mock.delay_in_ms {
+        tokio::time::sleep(Duration::from_millis(delay.into())).await;
+    }
     // method
     let invocation_method = match req.method() {
         &Method::OPTIONS => MockMethod::OPTIONS,
