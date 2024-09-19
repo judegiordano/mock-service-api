@@ -25,7 +25,7 @@ export default $config({
       handler: 'bootstrap',
       runtime: 'provided.al2023',
       bundle: 'target/lambda/api',
-      memory: '! GB',
+      memory: '1 GB',
       timeout: '10 minutes',
       architecture: "arm64",
       url: { cors: true, allowCredentials: true },
