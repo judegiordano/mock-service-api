@@ -30,11 +30,6 @@ serde_json = "1.0.127"
 aws_lambda_events = "0.15.1"
 validator = { version = "0.18.1", features = ["derive"] }
 
-
-
 [[bin]]
 name = "api"
 path = "src/bin/handlers/api.rs"
-
-
-
