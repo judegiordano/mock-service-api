@@ -14,6 +14,7 @@ pub struct MockResponse {
     #[serde(rename = "_id")]
     pub id: String,
     pub name: String,
+    pub description: Option<String>,
     pub method: MockMethod,
     pub response: Response,
     pub created_at: DateTime,
@@ -33,8 +34,9 @@ impl MockResponse {
 
     pub fn dto(&self) -> Dto {
         Dto {
-            id: &self.id,
-            name: &self.name,
+            id: self.id.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
             method: self.method.clone(),
             response: self.response.clone(),
             created_at: self.created_at.into(),
@@ -57,6 +59,7 @@ impl Default for MockResponse {
         Self {
             id: Self::generate_nanoid(),
             name: String::default(),
+            description: None,
             method: MockMethod::GET,
             response: Response::default(),
             created_at: DateTime::now(),
