@@ -132,6 +132,7 @@ pub mod mock {
 pub mod session {
     use chrono::Utc;
     use serde::{Deserialize, Serialize};
+    use validator::Validate;
 
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct Dto {
@@ -139,5 +140,15 @@ pub mod session {
         pub description: Option<String>,
         pub created_at: chrono::DateTime<Utc>,
         pub updated_at: chrono::DateTime<Utc>,
+    }
+
+    #[derive(Debug, Deserialize, Validate)]
+    pub struct CreateSessionPayload {
+        #[validate(length(
+            min = 0,
+            max = 1000,
+            message = "length should be between 0 and 1000 characters"
+        ))]
+        pub description: Option<String>,
     }
 }
