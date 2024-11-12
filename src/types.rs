@@ -128,3 +128,16 @@ pub mod mock {
         pub response: Response,
     }
 }
+
+pub mod session {
+    use chrono::Utc;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Serialize, Deserialize, Clone)]
+    pub struct Dto {
+        pub id: String,
+        pub description: Option<String>,
+        pub created_at: chrono::DateTime<Utc>,
+        pub updated_at: chrono::DateTime<Utc>,
+    }
+}
