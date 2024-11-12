@@ -1,6 +1,7 @@
 use meme_cache::{get, set};
 use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::{
     errors::AppError,
@@ -8,6 +9,8 @@ use crate::{
 };
 
 const MOCK_CACHE_IN_MS: i64 = 60_000;
+// ten minutes
+const DOCUMENT_EXPIRATION_MS: u64 = (1_000 * 60) * 10;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MockResponse {
@@ -22,11 +25,14 @@ pub struct MockResponse {
 }
 
 impl MockResponse {
-    #[allow(dead_code)]
     pub async fn migrate() -> Result<Vec<String>, MongooseError> {
-        let indexes = vec![IndexModel::builder()
-            .keys(doc! {})
-            .options(IndexOptions::builder().build())
+        let indexes = [IndexModel::builder()
+            .keys(doc! { "created_at": 1 })
+            .options(
+                IndexOptions::builder()
+                    .expire_after(Duration::from_millis(DOCUMENT_EXPIRATION_MS))
+                    .build(),
+            )
             .build()];
         let result = Self::create_indexes(&indexes).await?;
         Ok(result.index_names)

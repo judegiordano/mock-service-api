@@ -25,6 +25,7 @@ pub mod mock {
     pub struct Response {
         #[validate(range(min = 100, max = 599, message = "range should be between 100 and 599"))]
         pub status_code: u16,
+        // TODO: this should probably be custom deeply validated, for max array length and such
         pub body: Option<Value>,
         #[validate(nested)]
         pub headers: Option<Vec<MockHeader>>,

@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{extract::Path, http::StatusCode, response::IntoResponse, Json};
 use meme_cache::{clear, get, set};
 use mongoose::{doc, types::ListOptions, Model};
 use validator::Validate;
@@ -27,6 +27,19 @@ pub async fn create_mock(body: Json<CreateMockPayload>) -> ApiResponse {
     let mock = mock.save().await.map_err(AppError::bad_request)?;
     clear().await;
     Ok((StatusCode::CREATED, Json(mock.dto())).into_response())
+}
+
+pub async fn delete_mock(id: Path<String>) -> ApiResponse {
+    let removed = MockResponse::delete(doc! { "_id": id.to_string() })
+        .await
+        .map_err(AppError::bad_request)?;
+    clear().await;
+    Ok(Json(removed).into_response())
+}
+
+pub async fn read_mock(id: Path<String>) -> ApiResponse {
+    let mock = MockResponse::get_or_cache(&id.to_string()).await?;
+    Ok(Json(mock).into_response())
 }
 
 pub async fn list_mocks() -> ApiResponse {
