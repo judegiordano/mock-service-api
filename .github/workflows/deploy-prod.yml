@@ -48,9 +48,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: use Zig
-        uses: korandoru/setup-zig@v1
+        uses: mlugg/setup-zig@v1
         with:
-          zig-version: master
+          version: 0.13.0
 
       - name: use Cargo Lambda
         uses: jaxxstorm/action-install-gh-release@v1.9.0
