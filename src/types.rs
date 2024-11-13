@@ -1,8 +1,15 @@
 use axum::response::Response;
+use serde::{Deserialize, Serialize};
 
 use crate::errors::AppError;
 
 pub type ApiResponse = Result<Response, AppError>;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SessionMockParams {
+    pub session_id: String,
+    pub mock_id: String,
+}
 
 pub mod mock {
     use axum::http::{HeaderName, HeaderValue, Method};

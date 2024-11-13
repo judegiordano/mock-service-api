@@ -1,7 +1,6 @@
 use meme_cache::{get, set};
-use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
+use mongoose::{doc, types::MongooseError, DateTime, IndexModel, Model};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 use crate::{
     errors::AppError,
@@ -10,12 +9,14 @@ use crate::{
 
 const MOCK_CACHE_IN_MS: i64 = 60_000;
 // ten minutes
+#[allow(dead_code)]
 const DOCUMENT_EXPIRATION_MS: u64 = (1_000 * 60) * 10;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MockResponse {
     #[serde(rename = "_id")]
     pub id: String,
+    pub session: String,
     pub name: String,
     pub description: Option<String>,
     pub method: MockMethod,
@@ -26,14 +27,7 @@ pub struct MockResponse {
 
 impl MockResponse {
     pub async fn migrate() -> Result<Vec<String>, MongooseError> {
-        let indexes = [IndexModel::builder()
-            .keys(doc! { "created_at": 1 })
-            .options(
-                IndexOptions::builder()
-                    .expire_after(Duration::from_millis(DOCUMENT_EXPIRATION_MS))
-                    .build(),
-            )
-            .build()];
+        let indexes = [IndexModel::builder().keys(doc! { "session": 1 }).build()];
         let result = Self::create_indexes(&indexes).await?;
         Ok(result.index_names)
     }
@@ -50,13 +44,14 @@ impl MockResponse {
         }
     }
 
-    pub async fn get_or_cache(id: &str) -> Result<Self, AppError> {
-        if let Some(cached_mock) = get::<Self>(id).await {
-            return Ok(cached_mock);
+    pub async fn get_or_cache(session_id: &str, id: &str) -> Result<Dto, AppError> {
+        let path = format!("{session_id}/{id}");
+        if let Some(cached_mock) = get::<Self>(&path).await {
+            return Ok(cached_mock.dto());
         }
         let mock = Self::read_by_id(&id).await.map_err(AppError::not_found)?;
-        set(&id, &mock, MOCK_CACHE_IN_MS).await;
-        Ok(mock)
+        set(&path, &mock, MOCK_CACHE_IN_MS).await;
+        Ok(mock.dto())
     }
 }
 
@@ -64,6 +59,7 @@ impl Default for MockResponse {
     fn default() -> Self {
         Self {
             id: Self::generate_nanoid(),
+            session: String::default(),
             name: String::default(),
             description: None,
             method: MockMethod::GET,

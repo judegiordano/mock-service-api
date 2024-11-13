@@ -8,13 +8,14 @@ use std::time::Duration;
 
 use crate::{
     errors::AppError,
-    models::mock_response::MockResponse,
-    types::{mock::MockMethod, ApiResponse},
+    models::{mock_response::MockResponse, session::Session},
+    types::{mock::MockMethod, ApiResponse, SessionMockParams},
 };
 
-pub async fn invoke(mock_id: Path<String>, request: Request) -> ApiResponse {
-    let mock_id = mock_id.to_string();
-    let mock = MockResponse::get_or_cache(&mock_id).await?;
+pub async fn invoke(params: Path<SessionMockParams>, request: Request) -> ApiResponse {
+    let session = Session::get_by_id(&params.session_id).await?;
+    let mock_id = params.mock_id.to_string();
+    let mock = MockResponse::get_or_cache(&session.id, &mock_id).await?;
     let res = mock.response;
     // sleep
     if let Some(delay) = res.delay_in_ms {

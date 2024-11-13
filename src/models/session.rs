@@ -1,7 +1,7 @@
-use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
+use mongoose::{doc, types::MongooseError, DateTime, Model};
 use serde::{Deserialize, Serialize};
 
-use crate::types::session::Dto;
+use crate::{errors::AppError, types::session::Dto};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Session {
@@ -15,12 +15,11 @@ pub struct Session {
 impl Session {
     #[allow(dead_code)]
     pub async fn migrate() -> Result<Vec<String>, MongooseError> {
-        let indexes = vec![IndexModel::builder()
-            .keys(doc! {})
-            .options(IndexOptions::builder().build())
-            .build()];
-        let result = Self::create_indexes(&indexes).await?;
-        Ok(result.index_names)
+        Ok(vec![])
+    }
+
+    pub async fn get_by_id(id: &str) -> Result<Self, AppError> {
+        Self::read_by_id(id).await.map_err(AppError::not_found)
     }
 
     pub fn dto(&self) -> Dto {

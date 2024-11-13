@@ -4,8 +4,7 @@ mod controller;
 
 pub fn router() -> axum::Router {
     axum::Router::new()
-        .route("/", post(controller::create_mock))
-        .route("/:id", delete(controller::delete_mock))
-        .route("/:id", get(controller::read_mock))
-        .route("/", get(controller::list_mocks))
+        .route("/:session_id", post(controller::create_mock))
+        .route("/:session_id/:mock_id", delete(controller::delete_mock))
+        .route("/:session_id", get(controller::list_mocks))
 }
