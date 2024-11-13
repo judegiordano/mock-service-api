@@ -27,7 +27,7 @@ export default $config({
       bundle: 'target/lambda/api',
       memory: '2 GB',
       timeout: '10 minutes',
-      architecture: "arm64",
+      architecture: 'arm64',
       url: { cors: true, allowCredentials: true },
       logging: {
         retention: '1 week',
