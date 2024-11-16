@@ -24,5 +24,5 @@ RUN cargo build --release --target x86_64-unknown-linux-gnu
 
 # distroless image; launch app
 FROM gcr.io/distroless/cc
-COPY --from=builder /app/target/x86_64-unknown-linux-gnu/release/cloudfront_api /bin/cloudfront_api
-ENTRYPOINT [ "/bin/cloudfront_api" ]
+COPY --from=builder /app/target/x86_64-unknown-linux-gnu/release/api /bin/api
+ENTRYPOINT [ "/bin/api" ]
