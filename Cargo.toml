@@ -35,5 +35,9 @@ name = "api"
 path = "src/bin/handlers/api.rs"
 
 [[bin]]
+name = "cloudfront_api"
+path = "src/bin/handlers/cloudfront_api.rs"
+
+[[bin]]
 name = "migrate"
 path = "src/bin/scripts/migrate.rs"

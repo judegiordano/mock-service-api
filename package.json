@@ -7,10 +7,10 @@
   "license": "ISC",
   "devDependencies": {
     "@types/aws-lambda": "8.10.143",
-    "sst": "^3.0.68",
+    
     "sst-linux-x64": "^3.0.68"
   },
   "dependencies": {
-    "sst": "3.0.68"
+    "sst": "^3.3.3"
   }
 }
