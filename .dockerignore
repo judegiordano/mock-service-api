@@ -1,0 +1,24 @@
+
+# sst
+.sst
+sst.config.ts
+sst-env.d.ts
+.build
+tsconfig.json
+package.json
+pnpm-lock.json
+
+.cargo
+.github
+.vscode
+.dockerignore
+.gitignore
+template.env
+rust-toolchain
+README.md
+
+node_modules
+target
+
+docker-compose.yml
+Dockerfile
