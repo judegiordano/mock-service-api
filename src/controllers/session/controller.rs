@@ -21,7 +21,7 @@ pub async fn create_session(body: Json<CreateSessionPayload>) -> ApiResponse {
 }
 
 pub async fn read_session(id: Path<String>) -> ApiResponse {
-    let session = Session::get_or_cache(&id).await?;
+    let session = Session::get_by_id(&id).await?;
     Ok(Json(session.dto()).into_response())
 }
 
