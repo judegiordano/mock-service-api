@@ -1,16 +1,18 @@
 use meme_cache::{get, set};
-use mongoose::{doc, types::MongooseError, DateTime, IndexModel, Model};
+use mongoose::{
+    doc,
+    types::{ListOptions, MongooseError},
+    DateTime, IndexModel, Model,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     errors::AppError,
-    types::mock::{Dto, MockMethod, Response},
+    types::{
+        mock::{Dto, MockMethod, Response},
+        FIVE_MINUTES_IN_MS,
+    },
 };
-
-const MOCK_CACHE_IN_MS: i64 = 60_000;
-// ten minutes
-#[allow(dead_code)]
-const DOCUMENT_EXPIRATION_MS: u64 = (1_000 * 60) * 10;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MockResponse {
@@ -44,14 +46,33 @@ impl MockResponse {
         }
     }
 
-    pub async fn get_or_cache(session_id: &str, id: &str) -> Result<Dto, AppError> {
+    pub async fn get_or_cache(session_id: &str, id: &str) -> Result<Self, AppError> {
         let path = format!("{session_id}/{id}");
         if let Some(cached_mock) = get::<Self>(&path).await {
-            return Ok(cached_mock.dto());
+            return Ok(cached_mock);
         }
         let mock = Self::read_by_id(&id).await.map_err(AppError::not_found)?;
-        set(&path, &mock, MOCK_CACHE_IN_MS).await;
-        Ok(mock.dto())
+        set(&path, &mock, FIVE_MINUTES_IN_MS).await;
+        Ok(mock)
+    }
+
+    pub async fn list_or_cache(session_id: &str) -> Result<Vec<Self>, AppError> {
+        let path = format!("LIST/{session_id}");
+        if let Some(mocks) = get::<Vec<Self>>(&path).await {
+            return Ok(mocks);
+        };
+        let mocks = Self::list(
+            doc! { "session": &session_id },
+            ListOptions {
+                limit: 0,
+                sort: doc! { "created_at": -1 },
+                ..ListOptions::default()
+            },
+        )
+        .await
+        .map_err(AppError::not_found)?;
+        set(&path, &mocks, FIVE_MINUTES_IN_MS).await;
+        Ok(mocks)
     }
 }
 

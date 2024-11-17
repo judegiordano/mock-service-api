@@ -5,6 +5,8 @@ use crate::errors::AppError;
 
 pub type ApiResponse = Result<Response, AppError>;
 
+pub const FIVE_MINUTES_IN_MS: i64 = (1_000 * 60) * 5;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SessionMockParams {
     pub session_id: String,

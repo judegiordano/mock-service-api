@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub async fn invoke(params: Path<SessionMockParams>, request: Request) -> ApiResponse {
-    let session = Session::get_by_id(&params.session_id).await?;
+    let session = Session::get_or_cache(&params.session_id).await?;
     let mock_id = params.mock_id.to_string();
     let mock = MockResponse::get_or_cache(&session.id, &mock_id).await?;
     let res = mock.response;

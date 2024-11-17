@@ -1,7 +1,11 @@
+use meme_cache::{get, set};
 use mongoose::{doc, types::MongooseError, DateTime, Model};
 use serde::{Deserialize, Serialize};
 
-use crate::{errors::AppError, types::session::Dto};
+use crate::{
+    errors::AppError,
+    types::{session::Dto, FIVE_MINUTES_IN_MS},
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Session {
@@ -20,6 +24,15 @@ impl Session {
 
     pub async fn get_by_id(id: &str) -> Result<Self, AppError> {
         Self::read_by_id(id).await.map_err(AppError::not_found)
+    }
+
+    pub async fn get_or_cache(id: &str) -> Result<Self, AppError> {
+        if let Some(cached_session) = get::<Self>(&id).await {
+            return Ok(cached_session);
+        }
+        let session = Self::read_by_id(&id).await.map_err(AppError::not_found)?;
+        set(&id, &session, FIVE_MINUTES_IN_MS).await;
+        Ok(session)
     }
 
     pub fn dto(&self) -> Dto {
