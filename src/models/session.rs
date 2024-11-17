@@ -30,7 +30,7 @@ impl Session {
         if let Some(cached_session) = get::<Self>(&id).await {
             return Ok(cached_session);
         }
-        let session = Self::read_by_id(&id).await.map_err(AppError::not_found)?;
+        let session = Self::get_by_id(&id).await?;
         set(&id, &session, FIVE_MINUTES_IN_MS).await;
         Ok(session)
     }

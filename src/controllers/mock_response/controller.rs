@@ -52,3 +52,9 @@ pub async fn list_mocks(session_id: Path<String>) -> ApiResponse {
     let mocks = mocks.iter().map(MockResponse::dto).collect::<Vec<_>>();
     Ok((Json(mocks)).into_response())
 }
+
+pub async fn read_mock(params: Path<SessionMockParams>) -> ApiResponse {
+    let session = Session::get_or_cache(&params.session_id).await?;
+    let mock = MockResponse::get_or_cache(&session.id, &params.mock_id).await?;
+    Ok((Json(mock.dto())).into_response())
+}
