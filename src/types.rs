@@ -1,5 +1,5 @@
 use axum::response::Response;
-use cache::SessionCache;
+use cache::{MockCache, SessionCache};
 
 use crate::errors::AppError;
 
@@ -10,6 +10,7 @@ pub const FIVE_MINUTES_IN_MS: i64 = (1_000 * 60) * 5;
 #[derive(Clone)]
 pub struct AppState {
     pub session_cache: SessionCache,
+    pub mock_cache: MockCache,
 }
 
 pub mod cache {

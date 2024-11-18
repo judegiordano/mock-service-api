@@ -25,18 +25,15 @@ pub async fn create_session(body: Json<CreateSessionPayload>) -> ApiResponse {
     Ok((StatusCode::CREATED, Json(session.dto())).into_response())
 }
 
-pub async fn read_session(id: Path<String>, State(state): State<AppState>) -> ApiResponse {
+pub async fn read_session(State(state): State<AppState>, id: Path<String>) -> ApiResponse {
     let cache = state.session_cache;
-    if let Some(exists) = cache.get(&id.to_string()).await {
-        return Ok(Json(exists.dto()).into_response());
-    }
-    let session = Session::get_by_id(&id).await?;
-    cache.insert(id.to_string(), session.clone()).await;
+    let session = Session::get_or_cache(&id, &cache).await?;
     Ok(Json(session.dto()).into_response())
 }
 
-pub async fn delete_session(id: Path<String>) -> ApiResponse {
-    let session = Session::get_or_cache(&id).await?;
+pub async fn delete_session(State(state): State<AppState>, id: Path<String>) -> ApiResponse {
+    let cache = state.session_cache;
+    let session = Session::get_or_cache(&id, &cache).await?;
     Session::delete(doc! { "_id": &session.id })
         .await
         .map_err(AppError::bad_request)?;

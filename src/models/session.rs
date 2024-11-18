@@ -1,10 +1,9 @@
-use meme_cache::{get, set};
 use mongoose::{doc, types::MongooseError, DateTime, Model};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     errors::AppError,
-    types::{session::Dto, FIVE_MINUTES_IN_MS},
+    types::{cache::SessionCache, session::Dto},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -22,16 +21,15 @@ impl Session {
         Ok(vec![])
     }
 
-    pub async fn get_by_id(id: &str) -> Result<Self, AppError> {
-        Self::read_by_id(id).await.map_err(AppError::not_found)
-    }
-
-    pub async fn get_or_cache(id: &str) -> Result<Self, AppError> {
-        if let Some(cached_session) = get::<Self>(&id).await {
-            return Ok(cached_session);
+    pub async fn get_or_cache(id: &str, cache: &SessionCache) -> Result<Self, AppError> {
+        let id = id.to_string();
+        if let Some(exists) = cache.get(&id).await {
+            return Ok(exists);
         }
-        let session = Self::get_by_id(&id).await?;
-        set(&id, &session, FIVE_MINUTES_IN_MS).await;
+        let session = Self::read_by_id(&id)
+            .await
+            .map_err(|_| AppError::not_found("session not found"))?;
+        cache.insert(id, session.clone()).await;
         Ok(session)
     }
 

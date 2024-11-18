@@ -1,18 +1,14 @@
 use lambda_http::Error;
-use moka::future::{Cache, CacheBuilder};
-use service_mocker::{
-    controllers::routes, env::Env, logger, models::session::Session, types::AppState,
-};
-use std::time::Duration;
+use service_mocker::{cache, controllers::routes, env::Env, logger, types::AppState};
 
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
     logger::init()?;
     let env = Env::load()?;
-    let session_cache: Cache<String, Session> = CacheBuilder::new(10_000)
-        .time_to_live(Duration::from_secs(60))
-        .build();
-    let state = AppState { session_cache };
+    let state = AppState {
+        session_cache: cache::prepare(10_000, 60_000),
+        mock_cache: cache::prepare(10_000, 60_000),
+    };
     let app = axum::Router::new().nest("/", routes()).with_state(state);
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", env.port)).await?;
     tracing::info!("listening on {:?}", listener.local_addr()?);
