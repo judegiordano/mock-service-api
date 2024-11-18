@@ -1,5 +1,5 @@
 use axum::response::Response;
-use serde::{Deserialize, Serialize};
+use cache::SessionCache;
 
 use crate::errors::AppError;
 
@@ -7,10 +7,19 @@ pub type ApiResponse = Result<Response, AppError>;
 
 pub const FIVE_MINUTES_IN_MS: i64 = (1_000 * 60) * 5;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SessionMockParams {
-    pub session_id: String,
-    pub mock_id: String,
+#[derive(Clone)]
+pub struct AppState {
+    pub session_cache: SessionCache,
+}
+
+pub mod cache {
+    use moka::future::Cache;
+
+    use crate::models::{mock_response::MockResponse, session::Session};
+
+    pub type SessionCache = Cache<String, Session>;
+    pub type MockCache = Cache<String, MockResponse>;
+    pub type ListMockCache = Cache<String, Vec<MockResponse>>;
 }
 
 pub mod mock {
@@ -142,6 +151,12 @@ pub mod session {
     use chrono::Utc;
     use serde::{Deserialize, Serialize};
     use validator::Validate;
+
+    #[derive(Debug, Serialize, Deserialize)]
+    pub struct SessionMockParams {
+        pub session_id: String,
+        pub mock_id: String,
+    }
 
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct Dto {

@@ -8,7 +8,8 @@ use crate::{
     models::{mock_response::MockResponse, session::Session},
     types::{
         mock::{CreateMockPayload, ParseMethod},
-        ApiResponse, SessionMockParams, FIVE_MINUTES_IN_MS,
+        session::SessionMockParams,
+        ApiResponse, FIVE_MINUTES_IN_MS,
     },
 };
 

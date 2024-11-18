@@ -9,7 +9,7 @@ use std::time::Duration;
 use crate::{
     errors::AppError,
     models::{mock_response::MockResponse, session::Session},
-    types::{mock::MockMethod, ApiResponse, SessionMockParams},
+    types::{mock::MockMethod, session::SessionMockParams, ApiResponse},
 };
 
 pub async fn invoke(params: Path<SessionMockParams>, request: Request) -> ApiResponse {

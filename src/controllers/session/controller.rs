@@ -1,4 +1,9 @@
-use axum::{extract::Path, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
 use meme_cache::{remove, set};
 use mongoose::{doc, Model};
 use validator::Validate;
@@ -6,7 +11,7 @@ use validator::Validate;
 use crate::{
     errors::AppError,
     models::session::Session,
-    types::{session::CreateSessionPayload, ApiResponse, FIVE_MINUTES_IN_MS},
+    types::{session::CreateSessionPayload, ApiResponse, AppState, FIVE_MINUTES_IN_MS},
 };
 
 pub async fn create_session(body: Json<CreateSessionPayload>) -> ApiResponse {
@@ -20,8 +25,13 @@ pub async fn create_session(body: Json<CreateSessionPayload>) -> ApiResponse {
     Ok((StatusCode::CREATED, Json(session.dto())).into_response())
 }
 
-pub async fn read_session(id: Path<String>) -> ApiResponse {
+pub async fn read_session(id: Path<String>, State(state): State<AppState>) -> ApiResponse {
+    let cache = state.session_cache;
+    if let Some(exists) = cache.get(&id.to_string()).await {
+        return Ok(Json(exists.dto()).into_response());
+    }
     let session = Session::get_by_id(&id).await?;
+    cache.insert(id.to_string(), session.clone()).await;
     Ok(Json(session.dto()).into_response())
 }
 
