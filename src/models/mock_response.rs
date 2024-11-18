@@ -1,4 +1,3 @@
-use meme_cache::{get, set};
 use mongoose::{
     doc,
     types::{ListOptions, MongooseError},
@@ -9,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     errors::AppError,
     types::{
+        cache::{ListMockCache, MockCache},
         mock::{Dto, MockMethod, Response},
-        FIVE_MINUTES_IN_MS,
     },
 };
 
@@ -46,21 +45,26 @@ impl MockResponse {
         }
     }
 
-    pub async fn get_or_cache(session_id: &str, id: &str) -> Result<Self, AppError> {
-        let path = format!("{session_id}/{id}");
-        if let Some(cached_mock) = get::<Self>(&path).await {
-            return Ok(cached_mock);
+    pub async fn get_or_cache(id: &str, cache: &MockCache) -> Result<Self, AppError> {
+        let id = id.to_string();
+        if let Some(exists) = cache.get(&id).await {
+            return Ok(exists);
         }
-        let mock = Self::read_by_id(&id).await.map_err(AppError::not_found)?;
-        set(&path, &mock, FIVE_MINUTES_IN_MS).await;
+        let mock = Self::read_by_id(&id)
+            .await
+            .map_err(|_| AppError::not_found("mock not found"))?;
+        cache.insert(id, mock.clone()).await;
         Ok(mock)
     }
 
-    pub async fn list_or_cache(session_id: &str) -> Result<Vec<Self>, AppError> {
-        let path = format!("LIST/{session_id}");
-        if let Some(mocks) = get::<Vec<Self>>(&path).await {
-            return Ok(mocks);
-        };
+    pub async fn list_or_cache(
+        session_id: &str,
+        cache: &ListMockCache,
+    ) -> Result<Vec<Self>, AppError> {
+        let id = session_id.to_string();
+        if let Some(exists) = cache.get(&id).await {
+            return Ok(exists);
+        }
         let mocks = Self::list(
             doc! { "session": &session_id },
             ListOptions {
@@ -71,7 +75,7 @@ impl MockResponse {
         )
         .await
         .map_err(AppError::not_found)?;
-        set(&path, &mocks, FIVE_MINUTES_IN_MS).await;
+        cache.insert(id, mocks.clone()).await;
         Ok(mocks)
     }
 }

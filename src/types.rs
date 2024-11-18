@@ -1,16 +1,17 @@
 use axum::response::Response;
-use cache::{MockCache, SessionCache};
+use cache::{ListMockCache, MockCache, SessionCache};
 
 use crate::errors::AppError;
 
 pub type ApiResponse = Result<Response, AppError>;
 
-pub const FIVE_MINUTES_IN_MS: i64 = (1_000 * 60) * 5;
+pub const FIVE_MINUTES_IN_MS: u64 = (1_000 * 60) * 5;
 
 #[derive(Clone)]
 pub struct AppState {
     pub session_cache: SessionCache,
     pub mock_cache: MockCache,
+    pub list_mocks_cache: ListMockCache,
 }
 
 pub mod cache {

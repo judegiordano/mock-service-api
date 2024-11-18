@@ -17,10 +17,8 @@ pub async fn invoke(
     params: Path<SessionMockParams>,
     request: Request,
 ) -> ApiResponse {
-    let cache = state.session_cache;
-    let session = Session::get_or_cache(&params.session_id, &cache).await?;
-    let mock_id = params.mock_id.to_string();
-    let mock = MockResponse::get_or_cache(&session.id, &mock_id).await?;
+    Session::get_or_cache(&params.session_id, &state.session_cache).await?;
+    let mock = MockResponse::get_or_cache(&params.mock_id, &state.mock_cache).await?;
     let res = mock.response;
     // sleep
     if let Some(delay) = res.delay_in_ms {
