@@ -10,7 +10,7 @@ pub async fn main() -> Result<(), Error> {
     logger::init()?;
     let env = Env::load()?;
     let session_cache: Cache<String, Session> = CacheBuilder::new(10_000)
-        .time_to_live(Duration::from_secs(10))
+        .time_to_live(Duration::from_secs(60))
         .build();
     let state = AppState { session_cache };
     let app = axum::Router::new().nest("/", routes()).with_state(state);
