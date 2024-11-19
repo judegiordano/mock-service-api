@@ -7,7 +7,7 @@ pub type ApiResponse = Result<Response, AppError>;
 
 pub const FIVE_MINUTES_IN_MS: u64 = (1_000 * 60) * 5;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppState {
     pub session_cache: SessionCache,
     pub mock_cache: MockCache,
