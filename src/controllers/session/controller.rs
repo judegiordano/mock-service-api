@@ -30,14 +30,16 @@ pub async fn create_session(
     Ok((StatusCode::CREATED, Json(session.dto())).into_response())
 }
 
-pub async fn read_session(State(state): State<AppState>, id: Path<String>) -> ApiResponse {
-    let cache = state.session_cache;
-    let session = Session::get_or_cache(&id, &cache).await?;
+pub async fn read_session(State(state): State<AppState>, session_id: Path<String>) -> ApiResponse {
+    let session = Session::get_or_cache(&session_id, &state.session_cache).await?;
     Ok(Json(session.dto()).into_response())
 }
 
-pub async fn delete_session(State(state): State<AppState>, id: Path<String>) -> ApiResponse {
-    let session = Session::get_or_cache(&id, &state.session_cache).await?;
+pub async fn delete_session(
+    State(state): State<AppState>,
+    session_id: Path<String>,
+) -> ApiResponse {
+    let session = Session::get_or_cache(&session_id, &state.session_cache).await?;
     Session::delete(doc! { "_id": &session.id })
         .await
         .map_err(AppError::bad_request)?;
