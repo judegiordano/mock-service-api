@@ -21,33 +21,30 @@ export default $config({
       STAGE: stage,
       LOG_LEVEL: process.env.LOG_LEVEL,
       MONGO_URI: process.env.MONGO_URI,
-      PORT: '80'
     }
-    const vpc = new sst.aws.Vpc('ServiceMockerVpc', {
-      nat: 'ec2',
-      bastion: true,
-    });
-    const cluster = new sst.aws.Cluster('ServiceMockerCluster', { vpc });
-    const service = cluster.addService('ServiceMockerService', {
-      scaling: { min: 1, max: 1 },
-      image: {
-        context: './',
-        dockerfile: 'Dockerfile',
-      },
-      logging: { retention: '1 week' },
-      memory: '2 GB',
-      cpu: '1 vCPU',
-      loadBalancer: {
-        domain: `api.servicemocker.${domain}`,
-        ports: [
-          { listen: '80/http' },
-          { listen: '443/https', forward: '80/http' }
-        ],
-      },
+    const func = new sst.aws.Function('ServiceMockerApi', {
+      runtime: 'provided.al2023',
+      handler: 'bootstrap',
+      bundle: 'target/lambda/api',
+      memory: '1 GB',
+      timeout: '1 minute',
+      architecture: 'arm64',
+      url: { cors: { allowCredentials: true } },
+      logging: { retention: '1 week', format: 'json' },
       environment,
     });
+
+    const router = new sst.aws.Router('ServiceMockerRouter', {
+      invalidation: false,
+      routes: { '/*': func.url },
+      domain: {
+        name: `api.mock.${domain}`,
+        redirects: [`www.api.mock.${domain}`]
+      }
+    })
     return {
-      api: service.url
+      function: func.url,
+      url: router.url,
     }
   },
 });

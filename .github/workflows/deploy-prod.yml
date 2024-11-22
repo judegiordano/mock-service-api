@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pguyot/arm-runner-action@v2
 
       - name: use Node.js
         uses: actions/setup-node@v3
@@ -45,17 +46,17 @@ jobs:
       - name: use Rust cache
         uses: Swatinem/rust-cache@v2
 
-      # - name: use Zig
-      #   uses: mlugg/setup-zig@v1
-      #   with:
-      #     version: 0.13.0
+      - name: use Zig
+        uses: mlugg/setup-zig@v1
+        with:
+          version: 0.13.0
 
-      # - name: use Cargo Lambda
-      #   uses: jaxxstorm/action-install-gh-release@v1.9.0
-      #   with:
-      #     repo: cargo-lambda/cargo-lambda
-      #     platform: linux
-      #     arch: aarch64 # | x86_64
+      - name: use Cargo Lambda
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+          platform: linux
+          arch: aarch64 # | x86_64
 
       - name: cargo lint
         run: cargo lint
@@ -68,10 +69,10 @@ jobs:
           set -euxo pipefail
           pnpm sst install
 
-      # - name: build lambdas
-      #   run: |
-      #     set -euxo pipefail
-      #     cargo lambda build --release --arm64
+      - name: build lambdas
+        run: |
+          set -euxo pipefail
+          cargo lambda build --release --arm64
 
       - name: sst deploy
         run: |

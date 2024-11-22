@@ -6,23 +6,5 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
-    "ServiceMockerRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ServiceMockerService": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
-    "ServiceMockerVpc": {
-      "bastion": string
-      "type": "sst.aws.Vpc"
-    }
-    "api": {
-      "name": string
-      "type": "sst.aws.Function"
-      "url": string
-    }
   }
 }

@@ -16,7 +16,6 @@ pub struct Env {
     pub stage: Stage,
     pub log_level: Level,
     pub mongo_uri: String,
-    pub port: u32,
 }
 
 impl Env {
@@ -59,11 +58,6 @@ impl Env {
         Self::_get_required_string("MONGO_URI")
     }
 
-    pub fn port() -> Result<u32, AppError> {
-        let port = Self::_get_required_string("PORT")?.to_uppercase();
-        port.parse().map_err(AppError::internal_server_error)
-    }
-
     pub fn load() -> Result<Self, AppError> {
         if cfg!(debug_assertions) {
             use dotenv::dotenv;
@@ -73,7 +67,6 @@ impl Env {
             stage: Self::stage()?,
             log_level: Self::log_level(),
             mongo_uri: Self::mongo_uri()?,
-            port: Self::port()?,
         })
     }
 }
