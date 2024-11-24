@@ -35,7 +35,9 @@ export default $config({
     });
 
     const router = new sst.aws.Router('ServiceMockerRouter', {
-      invalidation: false,
+      invalidation: {
+        paths: ['/invoke/*']
+      },
       routes: { '/*': func.url },
       domain: {
         name: `api.mock.${domain}`,
