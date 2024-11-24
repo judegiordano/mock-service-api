@@ -40,6 +40,11 @@ export default $config({
       domain: {
         name: `api.mock.${domain}`,
         redirects: [`www.api.mock.${domain}`]
+      },
+      transform: {
+        cachePolicy: {
+          defaultTtl: 60
+        }
       }
     })
     return {
