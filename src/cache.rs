@@ -4,6 +4,9 @@ use std::{fmt::Debug, hash::Hash, time::Duration};
 
 use crate::errors::AppError;
 
+pub const ONE_MINUTE_IN_SECONDS: u16 = 60;
+pub const FIVE_MINUTES_IN_SECONDS: u16 = ONE_MINUTE_IN_SECONDS * 5;
+
 pub fn prepare<
     T: std::cmp::Eq + Hash + Send + Debug + Sync + 'static,
     V: Clone + Send + Sync + 'static,
