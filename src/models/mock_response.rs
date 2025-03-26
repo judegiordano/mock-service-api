@@ -1,7 +1,9 @@
+use std::time::Duration;
+
 use mongoose::{
     doc,
     types::{ListOptions, MongooseError},
-    DateTime, IndexModel, Model,
+    DateTime, IndexModel, IndexOptions, Model,
 };
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +12,7 @@ use crate::{
     types::{
         cache::{ListMockCache, MockCache},
         mock::{Dto, MockMethod, Query, Response},
+        ONE_DAY_IN_SECONDS,
     },
 };
 
@@ -29,7 +32,14 @@ pub struct MockResponse {
 
 impl MockResponse {
     pub async fn migrate() -> Result<Vec<String>, MongooseError> {
-        let indexes = [IndexModel::builder().keys(doc! { "session": 1 }).build()];
+        let exp = Duration::from_secs((ONE_DAY_IN_SECONDS * 7).into());
+        let indexes = [
+            IndexModel::builder().keys(doc! { "session": 1 }).build(),
+            IndexModel::builder()
+                .keys(doc! { "created_at": -1 })
+                .options(IndexOptions::builder().expire_after(exp).build())
+                .build(),
+        ];
         let result = Self::create_indexes(&indexes).await?;
         Ok(result.index_names)
     }
@@ -90,7 +100,7 @@ impl Default for MockResponse {
             name: String::default(),
             description: None,
             method: MockMethod::GET,
-            params: Default::default(),
+            params: Vec::default(),
             response: Response::default(),
             created_at: DateTime::now(),
             updated_at: DateTime::now(),

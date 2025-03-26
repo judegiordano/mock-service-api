@@ -8,10 +8,10 @@ use mongoose::{doc, Model};
 use validator::Validate;
 
 use crate::{
-    cache::{cache_response, FIVE_MINUTES_IN_SECONDS},
+    cache::cache_response,
     errors::AppError,
     models::session::Session,
-    types::{session::CreateSessionPayload, ApiResponse, AppState},
+    types::{session::CreateSessionPayload, ApiResponse, AppState, FIVE_MINUTES_IN_SECONDS},
 };
 
 pub async fn create_session(

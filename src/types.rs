@@ -6,6 +6,10 @@ use crate::errors::AppError;
 pub type ApiResponse = Result<Response, AppError>;
 
 pub const FIVE_MINUTES_IN_MS: u64 = (1_000 * 60) * 5;
+pub const ONE_MINUTE_IN_SECONDS: u16 = 60;
+pub const FIVE_MINUTES_IN_SECONDS: u16 = ONE_MINUTE_IN_SECONDS * 5;
+pub const ONE_HOUR_IN_SECONDS: u16 = ONE_MINUTE_IN_SECONDS * 60;
+pub const ONE_DAY_IN_SECONDS: u32 = ONE_HOUR_IN_SECONDS as u32 * 24;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
