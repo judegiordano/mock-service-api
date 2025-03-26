@@ -22,6 +22,7 @@ export default $config({
       LOG_LEVEL: process.env.LOG_LEVEL,
       MONGO_URI: process.env.MONGO_URI,
     }
+
     const func = new sst.aws.Function('ServiceMockerApi', {
       runtime: 'provided.al2023',
       handler: 'bootstrap',
@@ -35,18 +36,10 @@ export default $config({
     });
 
     const router = new sst.aws.Router('ServiceMockerRouter', {
-      invalidation: {
-        paths: ['/invoke/*']
-      },
       routes: { '/*': func.url },
       domain: {
         name: `api.mock.${domain}`,
         redirects: [`www.api.mock.${domain}`]
-      },
-      transform: {
-        cachePolicy: {
-          defaultTtl: 60
-        }
       }
     })
     return {

@@ -1,5 +1,8 @@
+use axum::http::HeaderMap;
 use moka::future::{Cache, CacheBuilder};
 use std::{fmt::Debug, hash::Hash, time::Duration};
+
+use crate::errors::AppError;
 
 pub fn prepare<
     T: std::cmp::Eq + Hash + Send + Debug + Sync + 'static,
@@ -14,4 +17,11 @@ pub fn prepare<
             tracing::debug!("[EVICTING {key:?}]: [CAUSE]: {cause:?}");
         })
         .build()
+}
+
+pub fn cache_response(seconds: u16) -> Result<HeaderMap, AppError> {
+    let age = format!("max-age={seconds}, public");
+    let mut headers = HeaderMap::new();
+    headers.insert("Cache-Control", age.parse().map_err(AppError::bad_request)?);
+    Ok(headers)
 }

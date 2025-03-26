@@ -28,6 +28,7 @@ pub async fn create_mock(
         session: session.id.clone(),
         name: body.name.clone(),
         description: body.description.clone(),
+        params: body.params.clone().unwrap_or_default(),
         method: body.method.try_from_string()?,
         response: body.response.clone(),
         ..Default::default()

@@ -73,6 +73,7 @@ pub mod mock {
         pub name: String,
         pub description: Option<String>,
         pub method: MockMethod,
+        pub params: Vec<Query>,
         pub response: Response,
         pub created_at: chrono::DateTime<Utc>,
         pub updated_at: chrono::DateTime<Utc>,
@@ -124,6 +125,12 @@ pub mod mock {
         }
     }
 
+    #[derive(Debug, Serialize, Deserialize, Clone)]
+    pub struct Query {
+        pub field: String,
+        pub required: bool,
+    }
+
     #[derive(Debug, Deserialize, Validate)]
     pub struct CreateMockPayload {
         #[validate(length(
@@ -144,6 +151,8 @@ pub mod mock {
             message = "length should be between 1 and 10 characters"
         ))]
         pub method: String,
+        #[validate(length(max = 10, message = "length should be between 0 and 10 entries"))]
+        pub params: Option<Vec<Query>>,
         #[validate(nested)]
         pub response: Response,
     }

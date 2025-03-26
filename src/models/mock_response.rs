@@ -9,7 +9,7 @@ use crate::{
     errors::AppError,
     types::{
         cache::{ListMockCache, MockCache},
-        mock::{Dto, MockMethod, Response},
+        mock::{Dto, MockMethod, Query, Response},
     },
 };
 
@@ -21,6 +21,7 @@ pub struct MockResponse {
     pub name: String,
     pub description: Option<String>,
     pub method: MockMethod,
+    pub params: Vec<Query>,
     pub response: Response,
     pub created_at: DateTime,
     pub updated_at: DateTime,
@@ -39,6 +40,7 @@ impl MockResponse {
             name: self.name.clone(),
             description: self.description.clone(),
             method: self.method.clone(),
+            params: self.params.clone(),
             response: self.response.clone(),
             created_at: self.created_at.into(),
             updated_at: self.updated_at.into(),
@@ -88,6 +90,7 @@ impl Default for MockResponse {
             name: String::default(),
             description: None,
             method: MockMethod::GET,
+            params: Default::default(),
             response: Response::default(),
             created_at: DateTime::now(),
             updated_at: DateTime::now(),

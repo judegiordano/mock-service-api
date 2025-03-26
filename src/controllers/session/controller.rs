@@ -8,6 +8,7 @@ use mongoose::{doc, Model};
 use validator::Validate;
 
 use crate::{
+    cache::cache_response,
     errors::AppError,
     models::session::Session,
     types::{session::CreateSessionPayload, ApiResponse, AppState},
@@ -30,9 +31,12 @@ pub async fn create_session(
     Ok((StatusCode::CREATED, Json(session.dto())).into_response())
 }
 
-pub async fn read_session(State(state): State<AppState>, session_id: Path<String>) -> ApiResponse {
-    let session = Session::get_or_cache(&session_id, &state.session_cache).await?;
-    Ok(Json(session.dto()).into_response())
+pub async fn read_session(State(_): State<AppState>, session_id: Path<String>) -> ApiResponse {
+    let session = Session::read_by_id(session_id.to_string())
+        .await
+        .map_err(|_| AppError::not_found("session not found"))?;
+    let headers = cache_response(300)?;
+    Ok((headers, Json(session.dto())).into_response())
 }
 
 pub async fn delete_session(
