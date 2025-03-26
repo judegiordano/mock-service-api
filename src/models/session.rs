@@ -1,10 +1,12 @@
+use chrono::Utc;
 use mongoose::{doc, types::MongooseError, DateTime, IndexModel, IndexOptions, Model};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 use crate::{
     errors::AppError,
-    types::{cache::SessionCache, session::Dto, ONE_DAY_IN_SECONDS},
+    models::mock_response::MockResponse,
+    types::{cache::SessionCache, mock::Dto as MockDto, session::Dto, ONE_DAY_IN_SECONDS},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -40,6 +42,45 @@ impl Session {
         Ok(session)
     }
 
+    pub async fn read_populated(id: &str) -> Result<PopulatedSessionDto, AppError> {
+        let pipeline = vec![
+            doc! {
+                "$match": { "_id": id }
+            },
+            doc! {
+                "$lookup": {
+                    "from": MockResponse::name(),
+                    "localField": "_id",
+                    "foreignField": "session",
+                    "as": "mock_responses"
+                }
+            },
+            doc! {
+                "$set":  {
+                    "mock_responses": {
+                        "$sortArray": {
+                          "input": "$mock_responses",
+                          "sortBy": { "updated_at": -1 }
+                        }
+                    }
+                }
+            },
+        ];
+        let response = Self::aggregate::<PopulatedSession>(pipeline, None)
+            .await
+            .map_err(AppError::not_found)?;
+        let first = response
+            .first()
+            .ok_or_else(|| AppError::NotFound("no session found".to_string()))?;
+        Ok(PopulatedSessionDto {
+            id: first.id.to_owned(),
+            description: first.description.to_owned(),
+            mock_responses: first.mock_responses.iter().map(MockResponse::dto).collect(),
+            created_at: first.created_at.into(),
+            updated_at: first.updated_at.into(),
+        })
+    }
+
     pub fn dto(&self) -> Dto {
         Dto {
             id: self.id.clone(),
@@ -62,3 +103,22 @@ impl Default for Session {
 }
 
 impl Model for Session {}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PopulatedSession {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub description: Option<String>,
+    pub mock_responses: Vec<MockResponse>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PopulatedSessionDto {
+    pub id: String,
+    pub description: Option<String>,
+    pub mock_responses: Vec<MockDto>,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
+}
