@@ -11,7 +11,7 @@ use crate::{
     cache::cache_response,
     errors::AppError,
     models::session::Session,
-    types::{session::CreateSessionPayload, ApiResponse, AppState, FIVE_MINUTES_IN_SECONDS},
+    types::{session::CreateSessionPayload, ApiResponse, AppState, ONE_MINUTE_IN_SECONDS},
 };
 
 pub async fn create_session(
@@ -34,7 +34,7 @@ pub async fn create_session(
 pub async fn read_session(State(state): State<AppState>, session_id: Path<String>) -> ApiResponse {
     Session::get_or_cache(&session_id, &state.session_cache).await?;
     let session = Session::read_populated(&session_id).await?;
-    let headers = cache_response(FIVE_MINUTES_IN_SECONDS)?;
+    let headers = cache_response(ONE_MINUTE_IN_SECONDS)?;
     Ok((headers, Json(session)).into_response())
 }
 
