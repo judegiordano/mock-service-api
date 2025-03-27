@@ -3,6 +3,7 @@ pub mod cache;
 pub mod controllers;
 pub mod env;
 pub mod errors;
+pub mod middleware;
 pub mod models;
 pub mod types;
 
