@@ -54,11 +54,10 @@ pub async fn delete_mock(
     })
     .await
     .map_err(AppError::bad_request)?;
-    state.mock_cache.remove(&params.mock_id.to_string()).await;
-    state
-        .list_mocks_cache
-        .invalidate(&session.id.to_string())
-        .await;
+    // clean caches
+    state.mock_cache.remove(&params.mock_id).await;
+    state.session_cache.invalidate(&session.id).await;
+    state.list_mocks_cache.invalidate(&session.id).await;
     Ok(Json(mock).into_response())
 }
 
