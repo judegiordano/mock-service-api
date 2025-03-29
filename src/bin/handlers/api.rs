@@ -3,7 +3,7 @@ use service_mocker::{
     controllers::routes,
     errors::AppError,
     logger,
-    middleware::helmet::helmet,
+    middleware::{helmet::helmet, tracing::tracing_middleware},
     types::{ApiResponse, AppState, FIVE_MINUTES_IN_MS},
 };
 
@@ -21,6 +21,7 @@ pub async fn main() -> Result<(), lambda_http::Error> {
             ApiResponse::Err(AppError::NotFound("route not found".to_string()))
         }))
         .with_state(state)
+        .layer(tracing_middleware())
         .layer(axum::middleware::from_fn(helmet));
     if cfg!(debug_assertions) {
         let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
