@@ -38,3 +38,7 @@ path = "src/bin/handlers/api.rs"
 [[bin]]
 name = "migrate"
 path = "src/bin/scripts/migrate.rs"
+
+[[bin]]
+name = "truncate"
+path = "src/bin/scripts/truncate.rs"
