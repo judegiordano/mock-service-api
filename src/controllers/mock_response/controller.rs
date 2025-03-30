@@ -8,13 +8,12 @@ use mongoose::{doc, Model};
 use validator::Validate;
 
 use crate::{
-    cache::cache_response,
     errors::AppError,
     models::{mock_response::MockResponse, session::Session},
     types::{
         mock::{CreateMockPayload, ParseMethod},
         session::SessionMockParams,
-        ApiResponse, AppState, ONE_MINUTE_IN_SECONDS,
+        ApiResponse, AppState,
     },
 };
 
@@ -66,8 +65,7 @@ pub async fn list_mocks(State(state): State<AppState>, session_id: Path<String>)
     let session = Session::get_or_cache(&session_id, &state.session_cache).await?;
     let mocks = MockResponse::list_or_cache(&session.id, &state.list_mocks_cache).await?;
     let mocks = mocks.iter().map(MockResponse::dto).collect::<Vec<_>>();
-    let headers = cache_response(ONE_MINUTE_IN_SECONDS)?;
-    Ok((headers, Json(mocks)).into_response())
+    Ok(Json(mocks).into_response())
 }
 
 pub async fn read_mock(

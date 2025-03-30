@@ -8,10 +8,9 @@ use mongoose::{doc, Model};
 use validator::Validate;
 
 use crate::{
-    cache::cache_response,
     errors::AppError,
     models::session::Session,
-    types::{session::CreateSessionPayload, ApiResponse, AppState, ONE_MINUTE_IN_SECONDS},
+    types::{session::CreateSessionPayload, ApiResponse, AppState},
 };
 
 pub async fn create_session(
@@ -34,8 +33,7 @@ pub async fn create_session(
 pub async fn read_session(State(state): State<AppState>, session_id: Path<String>) -> ApiResponse {
     Session::get_or_cache(&session_id, &state.session_cache).await?;
     let session = Session::read_populated(&session_id).await?;
-    let headers = cache_response(ONE_MINUTE_IN_SECONDS)?;
-    Ok((headers, Json(session)).into_response())
+    Ok(Json(session).into_response())
 }
 
 pub async fn delete_session(
@@ -48,5 +46,6 @@ pub async fn delete_session(
         .map_err(AppError::bad_request)?;
     state.session_cache.invalidate(&session.id).await;
     state.list_mocks_cache.invalidate(&session.id).await;
+    state.mock_cache.invalidate(&session.id).await;
     Ok(Json(session.dto()).into_response())
 }
