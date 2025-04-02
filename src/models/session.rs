@@ -19,7 +19,6 @@ pub struct Session {
 }
 
 impl Session {
-    #[allow(dead_code)]
     pub async fn migrate() -> Result<Vec<String>, MongooseError> {
         let exp = Duration::from_secs((ONE_DAY_IN_SECONDS * 7).into());
         let indexes = [IndexModel::builder()

@@ -1,9 +1,6 @@
-use axum::{
-    middleware,
-    routing::{delete, get, post},
-};
+use axum::routing::{delete, get, post};
 
-use crate::{middleware::cache::cache_response, types::AppState};
+use crate::types::AppState;
 
 mod controller;
 
@@ -13,10 +10,10 @@ pub fn router() -> axum::Router<AppState> {
         .route("/:session_id/:mock_id", delete(controller::delete_mock))
         .route(
             "/:session_id",
-            get(controller::list_mocks).layer(middleware::from_fn_with_state(60, cache_response)),
+            get(controller::list_mocks), // .layer(middleware::from_fn_with_state(60, cache_response)),
         )
         .route(
             "/:session_id/:mock_id",
-            get(controller::read_mock).layer(middleware::from_fn_with_state(60, cache_response)),
+            get(controller::read_mock), // .layer(middleware::from_fn_with_state(60, cache_response)),
         )
 }

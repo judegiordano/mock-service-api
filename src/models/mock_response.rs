@@ -1,11 +1,10 @@
-use std::time::Duration;
-
 use mongoose::{
     doc,
     types::{ListOptions, MongooseError},
     DateTime, IndexModel, IndexOptions, Model,
 };
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::{
     errors::AppError,
